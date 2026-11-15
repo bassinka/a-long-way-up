@@ -11,7 +11,7 @@
 </head>
 <body>
 <div class="shell">
-  <header class="top"><h1 class="brand">LONGWAY <span class="muted">// MISSION CONTROL</span></h1><div id="phaseBadge" class="badge">Crew setup</div></header>
+  <header class="top"><h1 class="brand">A LONG WAY UP!<span class="muted">// MISSION CONTROL</span></h1><div id="phaseBadge" class="badge">Crew setup</div></header>
   <div class="layout">
     <main class="screen">
       <div class="canvasbox"><canvas id="scene" width="640" height="360" aria-label="Pixel art mission scene"></canvas></div>
@@ -24,7 +24,7 @@
       <div class="card"><h3>Flight controls</h3><div class="small muted">Driver: WASD / arrow keys<br>Navigator: choose route before launch<br>Mechanic: press Space to stabilize systems<br>Astronaut: WASD / arrows on the surface; collect every sample.</div></div>
     </aside>
   </div>
-  <div class="footer">A 16×16 pixel-inspired desktop mission game • One to four local players</div>
+  <div class="footer">A collaborative mission control game • 1 - 4 local players</div>
 </div>
 <script>
 (()=>{
@@ -77,7 +77,7 @@ function drawScene(){ctx.clearRect(0,0,640,360);if(['base','setup','plan','build
  if(S.phase==='surface'){rect(0,0,640,360,S.mission.id==='moon'?'#111b2b':'#34241f');for(let i=0;i<25;i++){const x=(i*89)%640,y=235+(i*29)%125;rect(x,y,45,6,S.mission.id==='moon'?'#384353':'#704d37')}rect(35,172,40,36,'#6edbff');rect(45,180,18,18,'#d7f4ff');for(const q of S.surface.samples)if(!q.got){circle(q.x,q.y,8,'#ffd56d');rect(q.x-2,q.y-2,4,4,'#fff4bf')}const p=S.surface.astronaut;circle(p.x,p.y,8,'#f3d9b1');rect(p.x-5,p.y+6,10,9,'#e4edf0');rect(0,337,640,23,'#172a36');ctx.fillStyle='#dff6ff';ctx.font='12px monospace';ctx.fillText(`${S.mission.place.toUpperCase()} EVA  •  SAMPLES ${S.surface.got}/${S.mission.samples}`,12,19);return}rect(0,0,640,360,'#071321')}
 function circle(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
 window.addEventListener('keydown',e=>{const key=e.key===' '?' ':e.key.length===1?e.key.toLowerCase():e.key;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();S.keys[key]=true});window.addEventListener('keyup',e=>{const key=e.key===' '?' ':e.key.length===1?e.key.toLowerCase():e.key;S.keys[key]=false});
-// Buttons to skip a flight leg are intentionally unavailable: the crew must pilot to the target.
+
 setPhase('setup');
 })();
 </script>
