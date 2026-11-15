@@ -22,19 +22,36 @@ const modules=[
 const audio = {
   ctx: null,
   on: true,
-  bgm: new Audio('assets/planningreal.mp3')
+  currentMusic: 'menu',
+  tracks: {
+    menu: document.querySelector('#menuMusic'),
+    game: document.querySelector('#gameMusic')
+  }
 };
 
-audio.bgm.loop = true;
-audio.bgm.volume = 0.18;
-audio.bgm.preload = 'auto';
+audio.tracks.menu.volume = 0.18;
+audio.tracks.game.volume = 0.18;
 
-function startBgm() {
-  if (audio.on && audio.bgm.paused) {
-    audio.bgm.play().catch(() => {
+function playMusic(trackName) {
+  audio.currentMusic = trackName;
+
+  for (const [name, track] of Object.entries(audio.tracks)) {
+    if (name !== trackName) {
+      track.pause();
+      track.currentTime = 0;
+    }
+  }
+
+  const track = audio.tracks[trackName];
+  if (audio.on && track && track.paused) {
+    track.play().catch(() => {
       
     });
   }
+}
+
+function startCurrentMusic() {
+  if (audio.on) playMusic(audio.currentMusic);
 }
 
 $('#soundToggle').onclick = () => {
@@ -43,15 +60,15 @@ $('#soundToggle').onclick = () => {
   $('#soundToggle').setAttribute('aria-pressed', String(audio.on));
 
   if (audio.on) {
-    startBgm();
+    startCurrentMusic();
     sfx('select');
   } else {
-    audio.bgm.pause();
+    Object.values(audio.tracks).forEach(track => track.pause());
   }
 };
 
-document.addEventListener('pointerdown', startBgm);
-document.addEventListener('keydown', startBgm);
+document.addEventListener('pointerdown', startCurrentMusic, { once: true });
+document.addEventListener('keydown', startCurrentMusic, { once: true });
 function tone(freq=300,dur=.12,type='sine',vol=.025,to=null,delay=0){if(!audio.on)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audio.ctx)audio.ctx=new AC();if(audio.ctx.state==='suspended')audio.ctx.resume();const t=audio.ctx.currentTime+delay,o=audio.ctx.createOscillator(),g=audio.ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(to)o.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(audio.ctx.destination);o.start(t);o.stop(t+dur+.02)}
 function sfx(name){if(name==='select')tone(450,.1,'square',.02,620);if(name==='start'){tone(220,.15,'triangle',.03,440);tone(330,.18,'sine',.02,520,.08)}if(name==='build'){tone(150,.14,'sawtooth',.025,280);tone(260,.16,'triangle',.02,450,.1)}if(name==='launch'){tone(90,.32,'sawtooth',.035,210);tone(190,.38,'triangle',.025,470,.17)}if(name==='collect')tone(550,.11,'triangle',.03,900);if(name==='hit')tone(140,.15,'square',.04,65);if(name==='alarm'){tone(120,.18,'square',.03,70);tone(90,.18,'square',.025,60,.22)}if(name==='score'){tone(360,.2,'sine',.03,620);tone(540,.22,'triangle',.025,800,.13)}}
 $('#soundToggle').onclick=()=>{audio.on=!audio.on;$('#soundToggle').textContent=audio.on?'♪ Sound on':'♪ Sound off';$('#soundToggle').setAttribute('aria-pressed',String(audio.on));if(audio.on)sfx('select')};
@@ -62,7 +79,7 @@ function assignment(p){if(S.phase==='debrief')return'Scientist';if(['flight','su
 function drawCrew(){const crew=$('#crew');if(!S.players.length){crew.innerHTML='<span class="subtle">Choose a crew to begin.</span>';return}crew.innerHTML=S.players.map(p=>`<div class="crew-person ${p.bot?'bot':''}"><span><strong>P${p.id} ${p.bot?'BOT':'PLAYER'}</strong> · ${p.role}</span><span>${assignment(p)}${p.bot?' · BOT':''}</span></div>`).join('')}
 function slots(){const count=+$('#count').value,el=$('#slots');el.innerHTML='';for(let i=0;i<count;i++){const row=document.createElement('label');row.className='player-slot';row.innerHTML=`<strong>Player ${i+1}</strong><select aria-label="Player ${i+1} profession">${roles.map((r,j)=>`<option value="${r}" ${r===roles[i]?'selected':''}>${r}</option>`).join('')}</select>`;el.append(row)}}
 function render(){
- if(S.phase==='setup'){view.innerHTML=`<div class="phase-title"><div><div class="pixel-label">MISSION OPERATIONS CENTER</div><h2>Build your flight crew</h2></div></div><p class="subtle">Select 1–4 human players and assign distinct professions. Mission Control automatically fills every unchosen profession with a helpful bot.</p><div class="row"><label>Human players <select id="count"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></label><button id="assign" class="primary">Assign crew</button></div><div id="slots" class="player-slots"></div><div class="notice">Bots cover every unchosen profession, including mission selection, engineering, vehicle assembly, flight stations, EVA, and the science debrief.</div>`;$('#count').onchange=slots;slots();$('#assign').onclick=()=>{const picked=[...document.querySelectorAll('.player-slot select')].map(e=>e.value);if(new Set(picked).size!==picked.length)return alert('Choose a different profession for each player.');S.players=picked.map((role,i)=>({id:i+1,role,bot:false}));roles.filter(r=>!picked.includes(r)).forEach(role=>S.players.push({id:S.players.length+1,role,bot:true}));log(`Crew ready: ${picked.length} human player${picked.length===1?'':'s'} and ${4-picked.length} mission-control bot${picked.length===3?'':'s'}.`);sfx('start');setPhase('base')};return}
+ if(S.phase==='setup'){view.innerHTML=`<div class="phase-title"><div><div class="pixel-label">MISSION OPERATIONS CENTER</div><h2>Build your flight crew</h2></div></div><p class="subtle">Select 1–4 human players and assign distinct professions. Mission Control automatically fills every unchosen profession with a helpful bot.</p><div class="row"><label>Human players <select id="count"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></label><button id="assign" class="primary">Assign crew</button></div><div id="slots" class="player-slots"></div><div class="notice">Make sure everyone is actually GOOD at their role!.</div>`;$('#count').onchange=slots;slots();$('#assign').onclick=()=>{playMusic('game');const picked=[...document.querySelectorAll('.player-slot select')].map(e=>e.value);if(new Set(picked).size!==picked.length)return alert('Choose a different profession for each player.');S.players=picked.map((role,i)=>({id:i+1,role,bot:false}));roles.filter(r=>!picked.includes(r)).forEach(role=>S.players.push({id:S.players.length+1,role,bot:true}));log(`Crew ready: ${picked.length} human player${picked.length===1?'':'s'} and ${4-picked.length} mission-control bot${picked.length===3?'':'s'}.`);sfx('start');setPhase('base')};return}
  if(S.phase==='base'){view.innerHTML=`<div class="pixel-label">EARTH BASE · EMPLOYEE / BOT MISSION SPECIALIST</div><h2>Choose a research mission</h2><p class="subtle">Select a planetary field study or an orbital research experiment. If the Employee is a bot, it will choose the highlighted mission.</p><div id="missions" class="grid"></div><div class="actions"><button id="accept" class="primary">Employee: accept mission</button></div>`;$('#missions').innerHTML=missions.map(m=>`<button class="mission-card ${S.mission.id===m.id?'selected':''}" data-id="${m.id}"><b>${m.name}</b><p>${m.desc}</p><div class="mission-stats"><span class="tag">${m.place}</span><span class="tag">${m.kind==='station'?'ORBITAL RESEARCH':'FIELD RESEARCH'}</span><span class="tag">${m.samples} objectives</span></div></button>`).join('');document.querySelectorAll('.mission-card').forEach(b=>b.onclick=()=>{S.mission=missions.find(m=>m.id===b.dataset.id);sfx('select');render()});$('#accept').onclick=()=>{const bot=S.players.find(p=>p.role==='Employee').bot;log(`${bot?'Employee bot':'Employee'} selected ${S.mission.name}.`);sfx('start');setPhase('plan')};return}
  if(S.phase==='plan'){const t=S.mission.goal,fields=[['power','Power',20,120],['mass','Vehicle mass',30,150],['science','Scientific value',10,100],['cost','Cost',20,180],['lifetime','Mission lifetime',1,12],['data','Data return',10,100]],bot=S.players.find(p=>p.role==='Engineer').bot;view.innerHTML=`<div class="pixel-label">ENGINEERING OFFICE · MISSION DESIGN</div><h2>Plan the mission</h2><p class="subtle">Balance power, mass, science, cost, lifetime, and data. A bot engineer selects objective-aligned defaults.</p>${bot?'<div class="notice">Bot Engineer has set a balanced plan; adjust it if you like.</div>':''}<div class="slider-grid">${fields.map(([k,label,min,max])=>`<div class="slider-box"><label>${label}<b id="v-${k}">${t[k]}</b></label><input id="p-${k}" type="range" min="${min}" max="${max}" value="${t[k]}"></div>`).join('')}</div><div class="card">Launch vehicle <select id="vehicle"><option>Scout</option><option selected>Balanced</option><option>Heavy</option></select></div><div class="actions"><button id="planDone" class="primary">Finalize mission plan</button></div>`;fields.forEach(([k])=>$('#p-'+k).oninput=e=>$('#v-'+k).textContent=e.target.value);$('#planDone').onclick=()=>{S.plan={};fields.forEach(([k])=>S.plan[k]=+$('#p-'+k).value);S.plan.vehicle=$('#vehicle').value;log(`${bot?'Bot Engineer':'Engineer'} finalized mission trade-offs.`);sfx('select');setPhase('build')};return}
  if(S.phase==='build'){const bot=S.players.find(p=>p.role==='Mechanic').bot;if(bot&&!S.build.length)S.build=['engine','pod','solar','lander','lab'];view.innerHTML=`<div class="pixel-label">VEHICLE HANGAR · MECHANIC</div><h2>Assemble the launch vehicle</h2><p class="subtle">Select up to five modules; vehicle totals factor into mission analysis.</p>${bot?'<div class="notice">Bot Mechanic recommends a balanced starter build. You can change its modules.</div>':''}<div id="modules" class="module-grid"></div><div id="stats" class="metrics"></div><div class="actions"><button id="buildDone" class="primary">Certify vehicle</button></div>`;$('#modules').innerHTML=modules.map(m=>`<button class="module-card ${S.build.includes(m.id)?'selected':''}" data-id="${m.id}"><b>${m.name}</b><div class="small muted">Mass ${m.mass} · Power ${m.power}<br>Science ${m.science} · Data ${m.data} · Cost ${m.cost}</div></button>`).join('');document.querySelectorAll('.module-card').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(S.build.includes(id))S.build=S.build.filter(x=>x!==id);else if(S.build.length<5)S.build.push(id);sfx('build');render()});$('#stats').innerHTML=Object.entries(totals()).map(([k,v])=>`<div class="metric">${k}<strong>${v}</strong></div>`).join('');$('#buildDone').onclick=()=>{if(!S.build.length)return alert('Select at least one vehicle module.');log(`${bot?'Bot Mechanic':'Mechanic'} certified the vehicle.`);sfx('build');setPhase('training')};return}
