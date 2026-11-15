@@ -19,7 +19,39 @@ const modules=[
  {id:'lander',name:'Surface lander',mass:17,power:8,cost:24,science:8,data:8,life:1},{id:'lab',name:'Science bay',mass:14,power:9,cost:25,science:25,data:17,life:2},
  {id:'antenna',name:'Relay antenna',mass:6,power:5,cost:15,science:9,data:21,life:1},{id:'shield',name:'Debris shield',mass:10,power:8,cost:19,science:0,data:3,life:3}
 ];
-const audio={ctx:null,on:true};
+const audio = {
+  ctx: null,
+  on: true,
+  bgm: new Audio('assets/planningreal.mp3')
+};
+
+audio.bgm.loop = true;
+audio.bgm.volume = 0.18;
+audio.bgm.preload = 'auto';
+
+function startBgm() {
+  if (audio.on && audio.bgm.paused) {
+    audio.bgm.play().catch(() => {
+      
+    });
+  }
+}
+
+$('#soundToggle').onclick = () => {
+  audio.on = !audio.on;
+  $('#soundToggle').textContent = audio.on ? '♪ Sound on' : '♪ Sound off';
+  $('#soundToggle').setAttribute('aria-pressed', String(audio.on));
+
+  if (audio.on) {
+    startBgm();
+    sfx('select');
+  } else {
+    audio.bgm.pause();
+  }
+};
+
+document.addEventListener('pointerdown', startBgm);
+document.addEventListener('keydown', startBgm);
 function tone(freq=300,dur=.12,type='sine',vol=.025,to=null,delay=0){if(!audio.on)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audio.ctx)audio.ctx=new AC();if(audio.ctx.state==='suspended')audio.ctx.resume();const t=audio.ctx.currentTime+delay,o=audio.ctx.createOscillator(),g=audio.ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(to)o.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(audio.ctx.destination);o.start(t);o.stop(t+dur+.02)}
 function sfx(name){if(name==='select')tone(450,.1,'square',.02,620);if(name==='start'){tone(220,.15,'triangle',.03,440);tone(330,.18,'sine',.02,520,.08)}if(name==='build'){tone(150,.14,'sawtooth',.025,280);tone(260,.16,'triangle',.02,450,.1)}if(name==='launch'){tone(90,.32,'sawtooth',.035,210);tone(190,.38,'triangle',.025,470,.17)}if(name==='collect')tone(550,.11,'triangle',.03,900);if(name==='hit')tone(140,.15,'square',.04,65);if(name==='alarm'){tone(120,.18,'square',.03,70);tone(90,.18,'square',.025,60,.22)}if(name==='score'){tone(360,.2,'sine',.03,620);tone(540,.22,'triangle',.025,800,.13)}}
 $('#soundToggle').onclick=()=>{audio.on=!audio.on;$('#soundToggle').textContent=audio.on?'♪ Sound on':'♪ Sound off';$('#soundToggle').setAttribute('aria-pressed',String(audio.on));if(audio.on)sfx('select')};
